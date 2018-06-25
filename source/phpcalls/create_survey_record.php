@@ -1,8 +1,9 @@
 <?php
 require_once('./../config.php');
+date_default_timezone_set('America/Los_Angeles');
 $username = $_REQUEST['username'];
 $layout_id = $_REQUEST['layout'];
-$survey_date = date("Y-m-d h:i:sa");
+$survey_date = date("Y-m-d h:i:s A");
 
 $dbh = new PDO($dbhost, $dbh_insert_user, $dbh_insert_pw);
 $dbh->beginTransaction();

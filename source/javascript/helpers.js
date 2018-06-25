@@ -21,9 +21,9 @@ function saveHelper(){
 	selected_marker.setOpacity(1);
 	selected_furn.seat_places = temp_seat_places;
 	
-	if(whiteboard_activity != [])
+	if(temp_wb != [])
 	{
-		selected_furn.whiteboard = whiteboard_activity;
+		selected_furn.whiteboard = temp_wb;
 	}
 	
   	mymap.closePopup();
@@ -49,7 +49,9 @@ function checkAllHelper(){
 	checkAll(selected_furn);
 }
 
-function rotateHelper()
+//rotate selected furniture
+//pass the div to append to
+function rotateHelper(parentDiv)
 {
 	if(document.getElementById("rotateSlider") == null)
 	{
@@ -66,8 +68,8 @@ function rotateHelper()
 		sliderValue.id = "sliderValue";
 		sliderValue.innerText = "Value: "+selected_furn.degreeOffset;
 		
-		document.getElementById("seat_div_child").appendChild(sliderValue);
-		document.getElementById("seat_div_child").appendChild(rotateSlider);
+		document.getElementById(parentDiv).appendChild(sliderValue);
+		document.getElementById(parentDiv).appendChild(rotateSlider);
 	
 			
 		rotateSlider.oninput = function()
@@ -114,6 +116,14 @@ function updateHelper(){
 
 //On click of submission, Create's a Survey Record and Inserts each seat object into the database with that ID
 function submitSurveyHelper(){
-    var username = "<?php echo $_SESSION['username']?>";
     submitSurvey(username, layout, furnMap);
+}
+
+//deletes the selected marker
+function deleteHelper()
+{
+	//remove marker
+	mymap.removeLayer(selected_marker);
+	//remove furniture from furnMap
+	furnMap.delete(selected_furn.id);
 }

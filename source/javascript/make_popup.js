@@ -14,13 +14,13 @@ function markerClick(e){
 	document.getElementById("checkall").style.display = "block";
 	document.getElementById("save").style.display = "block";
 	document.getElementById("save").style.top = "40.5%";
-
+	
 	selected_furn = furnMap.get(this.options.fid);
 	selected_marker = this;
 	selected_marker.dragging.disable();
 	
 	temp_seat_places = [];
-	whiteboard_activity = [];
+	temp_wb = [];
 
 	while(added_seats == false)
 	{
@@ -29,26 +29,6 @@ function markerClick(e){
 			var seat_div_child = document.createElement("div");
 			seat_div_child.id = "seat_div_child";
 			document.getElementById("seat_div").appendChild(seat_div_child);
-
-			//find +/- buttons to st onclick
-			plusbutton = document.getElementById("plus");
-			minusbutton = document.getElementById("minus");
-			
-			if(this.options.numSeats === 0)
-			{
-				//add room input
-				addRoomInput(selected_furn.totalOccupants);
-				minusbutton.disabled = true;
-				plusbutton.disabled = true;
-				
-			} 
-			
-			else 
-			{
-				//not a room, reattach +/- buttons to plusHelper/minusHelper
-				minusbutton.disabled = false;
-				plusbutton.disabled = false;
-			
 
 			//If the JS object seat_places array is as big as default number of seats, it has been surveyed
 			//otherwise make the new seats and push onto array.
@@ -67,14 +47,17 @@ function markerClick(e){
 			
 			for (seat_num = 0; seat_num < cur_num_seats; seat_num++)
 			{
-				//newSeat = new Seat(seat_num);
+				//check if this furniture has been surveyed
 				if(surveyExists)
 				{
+					//it has been surveyed, so copy seats and wb to temp objects.
 					var copy_seat = Object.assign({}, selected_furn.seat_places[seat_num]);
 					if(Array.isArray(copy_seat.activity)){
 						copy_seat.activity = copy_seat.activity.slice();
 					}
 					temp_seat_places.push(copy_seat);
+					
+					temp_wb = selected_furn.whiteboard.slice();
 				}
 				else
 				{
@@ -82,6 +65,22 @@ function markerClick(e){
 				}
 				plus(temp_seat_places[seat_num], seat_num+1);
 			}
+			
+			//find +/- buttons to st onclick
+			plusbutton = document.getElementById("plus");
+			minusbutton = document.getElementById("minus");
+			
+			if(this.options.numSeats === 0){
+				//add room input
+				
+				addRoomInput(selected_furn.totalOccupants);
+				minusbutton.disabled = true;
+				plusbutton.disabled = true;
+				
+			} else {
+				//not a room, reattach +/- buttons to plusHelper/minusHelper
+				minusbutton.disabled = false;
+				plusbutton.disabled = false;
 			}
 			added_seats = true;
 		}
@@ -132,17 +131,18 @@ function markerClick(e){
 		input.value = cur_prop;
 		input.onchange = function()
 		{
-			var activityCheck = isInArray(whiteboard_activity, this.value);	
+			var activityCheck = isInArray(temp_wb, this.value, true);	
 			if (!activityCheck)
 			{
-				whiteboard_activity.push(this.value);
+				temp_wb.push(this.value);
 			}
 		}
 		
-		//check to see if the current activity is in the furnitures whiteboard activity array
-		var furnActivityCheck = isInArray(selected_furn.whiteboard, cur_prop);
+		//check to see if the current activity is in the furnitures whiteboard activity 
+		//		array if it was don't remove it
+		var furnActivityCheck = isInArray(selected_furn.whiteboard, cur_prop, false);
 		
-		//if it is mark the checkbox as checked
+		//mark the checkbox as checked if the value was in the array
 		if(furnActivityCheck)
 		{
 			input.checked = true;
@@ -211,8 +211,9 @@ function addRoomInput(currentOccupants){
 	document.getElementById("checkbox1").style.display = "none";
 	document.getElementById("checkall").style.display = "none";
 	document.getElementById("save").style.top = "33%";
+	
+	
 }
-
 //Expects: the current furniture to add seat to, and the seat number to add
 //Returns: nothing
 //Outputs: this will create all the default seat objects for the table, will also add a new 
@@ -336,7 +337,6 @@ function minus(cur_furn)
 		var removeBR = document.getElementById("br"+length);
 		removeBR.remove();
 
-		//cur_furn.seat_places.pop();
 		temp_seat_places.pop();
 		seat_num--;
 	}
@@ -383,12 +383,9 @@ function div_content(dd_div, cur_seat)
 					default_seat.checked = true;
 				}
 			}
-      
-			//get the CB of the Seat object
-			//seatOccupiedCB = document.getElementById("checkbox"+(cur_seat.seatPos+1));
-			//seatOccupiedCB.checked = true;
-			
-			var activityCheck = isInArray(cur_seat.activity, this.value);	
+
+			//Check to see if the value was already in the array, if it was remove it			
+			var activityCheck = isInArray(cur_seat.activity, this.value, true);	
 			if (!activityCheck)
 			{
 				cur_seat.activity.push(this.value);
@@ -416,13 +413,20 @@ function div_content(dd_div, cur_seat)
 	}
 }
 
-function isInArray(cur_array, cur_value)
+//Expects: an array, a value to search in the array, bool whether or not to remove the value from array
+//Returns: true if the item was in the array, false otherwise
+//Output: If you want the found value to be removed the value gets removed from the array
+function isInArray(cur_array, cur_value, remove)
 {
 	for(var i = 0; i < cur_array.length; i++)
 	{
 		if(cur_array[i] === cur_value)
 		{
-			cur_array.splice(i, 1);
+			if(remove)
+			{
+				cur_array.splice(i, 1);
+			}
+			
 			return true;
 		}
 	}

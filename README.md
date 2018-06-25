@@ -9,8 +9,8 @@ Contains Concepts and structure overview including database design.
 ### TeamCommunication
 Stores links to communication hubs for the team.
 
-### alpha
-The alpha layout editor.
-
 ### source
 Contains current build of project.
+
+### License
+The license of this product.

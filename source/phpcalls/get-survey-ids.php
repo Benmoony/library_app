@@ -9,7 +9,7 @@ $date_end = $get_date." 23::59::59";
 
 $dbh = new PDO($dbhost, $dbh_select_user, $dbh_select_pw);
 
-$stmt1 = $dbh->prepare("SELECT survey_id, layout_id FROM survey_record WHERE (survey_date BETWEEN :date_start AND :date_end)");
+$stmt1 = $dbh->prepare("SELECT survey_id, survey_record.layout_id, survey_date, floor FROM survey_record LEFT JOIN layout ON survey_record.layout_id = layout.layout_id WHERE (survey_date BETWEEN :date_start AND :date_end)");
 /*statment for after layout is selected*/
 $stmt1->bindParam(':date_start', $date_start, PDO::PARAM_STR);
 $stmt1->bindParam(':date_end', $date_end, PDO::PARAM_STR);
