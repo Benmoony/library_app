@@ -36,6 +36,7 @@ function queryFurniture(survey_id, layout_id){
 			console.log("Error: " + errorThrown);
 		}
 	});
+
 }
 
 //query for area data
@@ -85,6 +86,51 @@ function popFurnMap(jsonFurniture){
 	}
 	addSurveyedFurniture();
 	addSurveyedAreas();
+
+	var queried_info_legend = L.control({position: 'bottomright'});
+
+	queried_info_legend.onAdd = function (mymap){
+		var div = L.DomUtil.create('div', 'report_legend');
+		var header = document.createElement('p');
+		var floor_percent = seatsUsed/totalSeats;
+		floor_percent *= 100;
+		floor_percent = floor_percent.toFixed(2);
+
+		header.innerHTML ="Seats in use: " + seatsUsed +
+					"</br>Possible seats: " + totalSeats +
+					"</br> Floor % Use: " + floor_percent + "%";
+
+		div.appendChild(header);
+
+		return div;
+	}
+
+	queried_info_legend.addTo(mymap);
+	L.control.browserPrint({
+		title: 'Library Query Report',
+		documentTitle: 'Library Query Report',
+		printLayer: L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}', {
+			attribution: 'HSU Library App Team',
+			minZoom: 1,
+			maxZoom: 16,
+			ext: 'png'
+		}),
+		closePopupsOnPrint: false,
+		printModes: [
+			L.control.browserPrint.mode.landscape(),
+			"Portrait"
+		],
+		manualMode: false
+	}).addTo(mymap);
+
+	mymap.on("browser-print-start", function(e){
+		/*on print start we already have a print map and we can create new control and add it to the print map to be able to print custom information */
+		queried_info_legend.addTo(e.printMap);
+	});
+
+	mymap.on("browser-print-end", function(e){
+		queried_info_legend.addTo(mymap);
+	});
 }
 
 //populate the areaMap
@@ -212,7 +258,7 @@ function drawArea(area){
 	if (use_percent <= 10)
 	{
 		popupString = popupString.fontcolor("red");
-		poly.setStyle({fillColor: 'red'});
+		poly.setStyle({fillColor: '#d60000'});
 	}
 
 	else

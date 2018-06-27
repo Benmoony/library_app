@@ -1,6 +1,5 @@
 <?php
 	//The main page for any queries that the user will grab from the DB.
-	//Needs more queries such as activities, whiteboard use.
 	//TODO: give a calendar view to choose the date of a survey record,
 	//  Load the state of the library during that survey to give us not only area_use, but furniture location
 	session_start();
@@ -13,7 +12,7 @@
     <title> Library Query Report </title>
     <meta charset="utf-8" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css"
+	   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css"
     integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ=="
     crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"
@@ -22,6 +21,7 @@
 		<script src="./javascript/report-objs-pop.js"></script>
 		<script src="./javascript/leaflet.rotatedMarker.js"></script>
 		<script src="./javascript/icons.js"></script>
+		<script src="./javascript/leaflet.browser.print.min.js"></script>
     <link rel="stylesheet" href="styles/layout.css" type="text/css" >
     <link rel="stylesheet" href="styles/format.css" type="text/css" >
 
@@ -37,6 +37,7 @@
 <script type="text/javascript">
     var cur_selected_date;
 		var json_object;
+		var survey_info_legend = L.control();
 
     $(function(){
         $('#date-select').on("change", function(){
@@ -80,6 +81,27 @@
 
         });
     });
+
+		/*
+		delete line: 149, 170
+
+		function printReport(){
+			var page = document.body.innerHTML;
+			var print = document.getElementById('mapid').innerHTML;
+			document.body.innerHTML = print;
+			window.print();
+			document.body.innerHTML = page;
+
+			var map = document.getElementById('mapid').innerHTML;
+			var rFrame = document.getElementById('print_frame');
+			var frameDoc = rFrame.contentWindow.document;
+
+			frameDoc.open();
+			frameDoc.write(map);
+			frameDoc.close();
+			frameDoc.body.print();
+
+		}*/
 </script>
 <body>
     <header>
@@ -124,16 +146,14 @@
                 </select>
 
                 <input type="submit" name="submit-query" id="query_submit_button"/>
-								<input type="button" id="query_print_button" value="Print Report"/>
+								<!--<input type="button" id="query_print_button" value="Print Report" style="display:none" onclick="printReport()"/>-->
             </fieldset>
         </form>
                 <?php
             }
         ?>
 
-		<div id="mapid"></div>
-		<div id="reportDiv"></div>
-
+			<div id="mapid"></div>
 		<?php
 
 		if (array_key_exists("survey_id", $_GET)){
@@ -142,8 +162,12 @@
 
 				//create maps and grab survey_id
 				var survey_id = <?= $_GET["survey_id"] ?>;
+
+				//used to keep track of all the seats on the floor and how many are being used
 				var totalSeats = 0;
 				var seatsUsed = 0;
+
+				//document.getElementById("query_print_button").style.display = "block";
 
 				$.ajax({
 	                url: 'phpcalls/get-survey-info.php',
@@ -162,8 +186,6 @@
 										surv_date = surv_date_time_arr[0];
 	                  var query_header = document.getElementById('query_header');
 	                	query_header.style.display = "none";
-
-										var survey_info_legend = L.control();
 
 										survey_info_legend.onAdd = function (mymap){
 											var div = L.DomUtil.create('div', 'report_legend');
@@ -229,8 +251,6 @@
 
 			mymap.fitBounds(bounds);
 
-
-
 			//On zoomend, resize the marker icons
         mymap.on('zoomend', function() {
             var markerSize;
@@ -250,56 +270,14 @@
             $('#mapid .furnitureLargeIcon').css({'width':newLargeZoom,'height':newLargeZoom});
         });
 
-				var queried_info_legend = L.control({position: 'bottomright'});
+				mymap.on("browser-print-start", function(e){
+					/*on print start we already have a print map and we can create new control and add it to the print map to be able to print custom information */
+					survey_info_legend.addTo(e.printMap);
+				});
 
-				queried_info_legend.onAdd = function (mymap){
-					var div = L.DomUtil.create('div', 'report_legend');
-					var header = document.createElement('p');
-					var floor_percent = seatsUsed/totalSeats;
-					header.innerHTML ="Avg. use: " + seatsUsed +
-								"</br>Possible seats: " + totalSeats +
-								"</br> Floor % Use: " + floor_percent;
-
-					div.appendChild(header);
-					/*var table = document.createElement('TABLE');
-					table.id = "query_table";
-
-					//create the headers for the table
-					var table_header = document.createElement("TR");
-					table_header.setAttribute("id", "table_header");
-					table.appendChild(table_header);
-
-					//floor number
-					var td_floor = document.createElement("TD");
-					var table_floor = document.createTextNode("Floor");
-
-					//average use of the furniture
-					var td_use = document.createElement("TD");
-					var table_use = document.createTextNode("Avg. use");
-
-					//number of seats avaiable on the floor
-					var td_seats = document.createElement("TD");
-					var table_seats = document.createTextNode("Possible Seats");
-
-					//floor use percentage
-					var td_percent = document.createElement("TD");
-					var table_percent = document.createTextNode("Floor % Use");
-
-					td_floor.appendChild(table_floor);
-					td_use.appendChild(table_use);
-					td_seats.appendChild(table_seats);
-					td_percent.appendChild(table_percent);
-					table_header.appendChild(td_floor);
-					table_header.appendChild(td_use);
-					table_header.appendChild(td_seats);
-					table_header.appendChild(td_percent);
-
-					div.appendChild(table);*/
-
-					return div;
-				}
-
-				queried_info_legend.addTo(mymap);
+				mymap.on("browser-print-end", function(e){
+					survey_info_legend.addTo(mymap);
+        });
 
 			</script>
 			<?php

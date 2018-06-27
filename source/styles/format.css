@@ -124,3 +124,10 @@ footer > p{
 .nav_button button{
 	width: 100%;
 }
+
+#print_frame{
+	width: 1px;
+	height: 1px;
+	position: absolute;
+	left: -9999px
+}
