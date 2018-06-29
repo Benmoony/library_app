@@ -80,6 +80,7 @@ function popFurnMap(jsonFurniture){
 			cur_furn.modified = true;
 			cur_furn.original_x = furn.original_x;
 			cur_furn.original_y = furn.original_y;
+			modified_furn++;
 		}
 
 		furnMap.set(furn.furniture_id, cur_furn);
@@ -101,6 +102,39 @@ function popFurnMap(jsonFurniture){
 					"</br> Floor % Use: " + floor_percent + "%";
 
 		div.appendChild(header);
+
+		//This is used for the printabe iFrame
+		var report = document.getElementById("print_frame");
+		var report_header = document.createElement("H2");
+		var overview_header = document.createElement("H3");
+		var report_text = document.createElement("P");
+		var area_header = document.createElement("H3");
+		var area_data = document.createElement("P");
+
+		report_header.style.textAlign = "center";
+		overview_header.style.textDecoration = "underline";
+		area_header.style.textDecoration = "underline";
+
+		report.contentDocument.body.appendChild(report_header);
+		report.contentDocument.body.appendChild(overview_header);
+		report.contentDocument.body.appendChild(report_text);
+		report.contentDocument.body.appendChild(area_header);
+		report.contentDocument.body.appendChild(area_data);
+
+		report_header.innerHTML = print_header;
+		overview_header.innerHTML = "Floor Overview:";
+		report_text.innerHTML ="Seats in use: " + seatsUsed +
+					"</br>Possible seats: " + totalSeats +
+					"</br> Floor % Use: " + floor_percent + "%";
+		area_header.innerHTML = "Area Overview:";
+		area_data.innerHTML = area_string;
+
+		if(modified_furn > 0){
+			var mod_furn_header = document.createElement("H3");
+			report.contentDocument.body.appendChild(mod_furn_header);
+			mod_furn_header.style.textDecoration = "underline";
+			mod_furn_header.innerHTML = "Modified Furniture: " + modified_furn; 
+		}
 
 		return div;
 	}
@@ -131,6 +165,23 @@ function popFurnMap(jsonFurniture){
 	mymap.on("browser-print-end", function(e){
 		queried_info_legend.addTo(mymap);
 	});
+
+	/*var report = document.getElementById("print_frame");
+	var report_text = document.createElement("P");
+
+	report.contentDocument.body.appendChild(report_text);
+
+	var title = document.createElement("TR");
+	header.setAttribute("id", "title");
+	document.getElementById("print_table").appendChild(title);
+
+	var title_data = document.createElement("TD");
+	var title_text = document.createTextNode()
+
+	report_text.innerHTML = "Seats in use: " + seatsUsed +
+				"</br>Possible seats: " + totalSeats +
+				"</br> Floor % Use: " + floor_percent + "%";
+	//report_data.appendChild(report_text);*/
 }
 
 //populate the areaMap
@@ -245,6 +296,7 @@ function addSurveyedAreas(){
 //draw surveyed areas
 function drawArea(area){
 	var curVerts = [];
+	var report = document.getElementById("print_frame");
 
 	for(var i=0; i < area.verts.length; i++){
 		area_verts = area.verts[i];
@@ -255,18 +307,31 @@ function drawArea(area){
 	use_percent *= 100;
 	use_percent = use_percent.toFixed(2);
 	popupString = "<strong>"+area.area_name +"</strong></br>Average use: " + area.occupants + " of " + area.seats + " or " + use_percent + "%";
-	if (use_percent <= 10)
-	{
-		popupString = popupString.fontcolor("red");
-		poly.setStyle({fillColor: '#d60000'});
-	}
-
-	else
+	if (use_percent > 10)
 	{
 		popupString = popupString.fontcolor("green");
 		poly.setStyle({fillColor: 'green'});
 	}
+
+	else
+	{
+		popupString = popupString.fontcolor("red");
+		poly.setStyle({fillColor: 'red'});
+	}
+
 	poly.bindPopup(popupString);
+
+	if(area.seats === 0){
+		area_string += "<strong>" + area.area_name + "</strong></br>Room use: " + area.occupants + "</br></br>";
+	}
+
+	else if(typeof area_string == 'undefined'){
+		area_string = "<strong>" + area.area_name + "</strong></br>Average use: " + area.occupants + " of " + area.seats + " or " + use_percent + "%</br></br>";
+	}
+
+	else{
+		area_string += "<strong>" + area.area_name + "</strong></br>Average use: " + area.occupants + " of " + area.seats + " or " + use_percent + "%</br></br>";
+	}
 
 	return poly;
 }

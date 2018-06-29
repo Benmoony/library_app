@@ -84,24 +84,12 @@
 
 		/*
 		delete line: 149, 170
-
+		*/
 		function printReport(){
-			var page = document.body.innerHTML;
-			var print = document.getElementById('mapid').innerHTML;
-			document.body.innerHTML = print;
-			window.print();
-			document.body.innerHTML = page;
-
 			var map = document.getElementById('mapid').innerHTML;
 			var rFrame = document.getElementById('print_frame');
-			var frameDoc = rFrame.contentWindow.document;
-
-			frameDoc.open();
-			frameDoc.write(map);
-			frameDoc.close();
-			frameDoc.body.print();
-
-		}*/
+			rFrame.contentWindow.print();
+		}
 </script>
 <body>
     <header>
@@ -146,7 +134,7 @@
                 </select>
 
                 <input type="submit" name="submit-query" id="query_submit_button"/>
-								<!--<input type="button" id="query_print_button" value="Print Report" style="display:none" onclick="printReport()"/>-->
+								<input type="button" id="query_print_button" value="Print Report" style="display:none" onclick="printReport()"/>
             </fieldset>
         </form>
                 <?php
@@ -154,6 +142,12 @@
         ?>
 
 			<div id="mapid"></div>
+			<iframe id="print_frame">
+				<html>
+					<body>
+					</body>
+				</html>
+			</iframe>
 		<?php
 
 		if (array_key_exists("survey_id", $_GET)){
@@ -166,8 +160,11 @@
 				//used to keep track of all the seats on the floor and how many are being used
 				var totalSeats = 0;
 				var seatsUsed = 0;
+				var print_header;
+				var area_string;
+				var modified_furn = 0;
 
-				//document.getElementById("query_print_button").style.display = "block";
+				document.getElementById("query_print_button").style.display = "block";
 
 				$.ajax({
 	                url: 'phpcalls/get-survey-info.php',
@@ -193,6 +190,9 @@
 											header.innerHTML = "Survey: " + survey_id + "</br>Layout: "
 														+ lay_id + "</br>Floor: " + floor_num
 														+ "</br> Time: " + surv_time + "</br> Date: " + surv_date;
+											print_header = "Survey " + survey_id + " for Layout "
+														+ lay_id + " on Floor " + floor_num
+														+ " at " + surv_time + " on " + surv_date;
 
 											div.appendChild(header);
 
