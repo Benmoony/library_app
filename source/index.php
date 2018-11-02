@@ -45,7 +45,7 @@
 			    $password = $_POST['password_in'];
 			    $author = "has no value";
 
-			    if($username == "admin" && $password == "gdc4562" ){
+			    if($username == "user" && $password == "default" ){
 
 				//if I reach here, I have connected to my username and password, and can now travel to the next page and store session variables
 				$_SESSION["username"] = $username;
